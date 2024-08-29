@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Realtime Node.js Chat App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="messages"></div>
+  <form>
+    <input type="text" id="input" placeholder="Type your message here...">
+    <button type="button" id="send">Send</button>
+    <button type="button" id="logout">Logout</button>
+  </form>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const username = params.get("username"); // Extract username from URL
+    const socket = new WebSocket(`ws://localhost:8080/?username=${username}`);
+
+    socket.addEventListener('open', function(event) {
+      console.log('Connected!');
+    });
+
+    socket.addEventListener('message', function(event) {
+      const data = JSON.parse(event.data);
+      const message = data.message;
+      const output = document.getElementById('messages');
+      if (data.username === username) {
+        output.innerHTML += '<p style="color: green;">' + data.username + ': ' + message + '</p>';
+      } else {
+        output.innerHTML += '<p>' + data.username + ': ' + message + '</p>';
+      }
+    });
+
+    const sendButton = document.getElementById('send');
+    sendButton.addEventListener('click', function() {
+      const input = document.getElementById('input');
+      const message = input.value;
+      socket.send(message);
+      input.value = '';
+      const output = document.getElementById('messages');
+      output.innerHTML += '<p style="color: green;">' + username + ': ' + message + '</p>';
+      
+    });
+
+    const input = document.getElementById('input');
+    input.addEventListener('keypress', function(event) {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        const message = input.value;
+        socket.send(message);
+        input.value = '';
+        const output = document.getElementById('messages');
+        output.innerHTML += '<p style="color: green;">' + username + ': ' + message + '</p>';
+      }
+    });
+
+    const logoutButton = document.getElementById('logout');
+    logoutButton.addEventListener('click', function() {
+      window.location.href = "login.php";
+    });
+  </script>
+</body>
+</html>
